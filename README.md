@@ -161,11 +161,11 @@ here for debugging.  Inspect `RAW_LINE` in TlmViewer to see the raw text.
 git clone https://github.com/rubenfixit/openc3-cosmos-featherweight-gps.git
 cd openc3-cosmos-featherweight-gps
 
-# Install dev dependencies (rspec)
+# Install dev dependencies
 bundle install
 
 # Run parser tests — no OpenC3 gem required
-bundle exec rspec
+bundle exec rake spec
 
 # Build the gem
 gem build openc3-cosmos-featherweight-gps.gemspec
@@ -177,7 +177,7 @@ gem build openc3-cosmos-featherweight-gps.gemspec
 ## Running Tests
 
 ```bash
-bundle exec rspec
+bundle exec rake spec
 ```
 
 Tests cover:
