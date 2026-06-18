@@ -20,19 +20,19 @@ module OpenC3
   class FeatherweightGpsProtocol < Protocol
     def initialize(allow_empty_data = nil)
       super(allow_empty_data)
-      @buf = +'' # mutable string buffer, encoding-agnostic
+      @buf = ''.b # binary buffer — TCP data and FWT packets are ASCII-8BIT
     end
 
     def reset
       super
-      @buf = +''
+      @buf = ''.b
     end
 
     # Called by the interface with raw bytes from the TCP socket.
     # Returns [binary_blob, extra] when a complete, parseable line is ready,
     # or :STOP when we need more data.
     def read_data(data, extra = nil)
-      @buf << data.to_s
+      @buf << data.to_s.b
 
       while (nl_pos = @buf.index("\n"))
         line = @buf.slice!(0, nl_pos + 1).chomp
