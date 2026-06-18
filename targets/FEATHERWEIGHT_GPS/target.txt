@@ -1,0 +1,1 @@
+REQUIRE featherweight_gps_protocol
