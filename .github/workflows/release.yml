@@ -21,6 +21,12 @@ jobs:
           ruby-version: '3.1'
           bundler-cache: false
 
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Run tests
+        run: bundle exec rake spec
+
       - name: Build gem
         run: gem build openc3-cosmos-featherweight-gps.gemspec
 
