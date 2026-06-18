@@ -1,0 +1,9 @@
+VARIABLE target_name FEATHERWEIGHT_GPS
+VARIABLE bridge_host host.docker.internal
+VARIABLE bridge_port 2950
+
+TARGET FEATHERWEIGHT_GPS <%= target_name %>
+
+INTERFACE <%= target_name %>_INT tcpip_client_interface.rb <%= bridge_host %> <%= bridge_port %> <%= bridge_port %> nil nil
+  MAP_TARGET <%= target_name %>
+  PROTOCOL READ FeatherweightGpsProtocol
