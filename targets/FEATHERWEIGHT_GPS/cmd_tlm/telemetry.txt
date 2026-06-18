@@ -1,0 +1,104 @@
+# Featherweight GPS Tracker — Telemetry Definitions
+#
+# Three packet types, identified by PACKET_ID (uint8) at byte 0:
+#   1 = GPS_STATUS  (from @ GPS_STAT lines)
+#   2 = LINK_STATUS (from @ RX_NOMTK lines)
+# 255 = UNKNOWN_LINE (any other @ line, or parse failure)
+#
+# All packets are LITTLE_ENDIAN binary produced by FeatherweightGpsProtocol.
+# Field bit offsets are absolute from byte 0.  See featherweight_gps_parser.rb
+# for the pack() format that must stay in sync with these definitions.
+#
+# Protocol reference: Featherweight GPS Tracker User's Manual, Feb 2025, Appendix A
+# Baud rate: 115200 8N1, V2 ground station USB only.
+
+# ---------------------------------------------------------------------------
+# GPS_STATUS  (49 bytes)
+# Binary layout: C C a10 S< C C f< l< f< f< l< l< l< C C C C C
+# ---------------------------------------------------------------------------
+TELEMETRY FEATHERWEIGHT_GPS GPS_STATUS LITTLE_ENDIAN "GPS position and velocity from tracker"
+  # Identification
+  ID_ITEM PACKET_ID    0    8  UINT   1  "Packet type (1 = GPS_STATUS)"
+  ITEM    UNIT_TYPE    8    8  UINT      "Source: 1=TRK tracker 2=GS ground-station 3=FND found-lost-rocket"
+    STATE TRK 1
+    STATE GS  2
+    STATE FND 3
+  ITEM    TRACKER_ID  16   80  STRING   "Tracker callsign or LoRa ID (up to 10 chars)"
+  # UTC date (zeros before GPS lock)
+  ITEM    YEAR        96   16  UINT     "UTC year (0 before first GPS lock)"
+  ITEM    MONTH      112    8  UINT     "UTC month (0 before first GPS lock)"
+  ITEM    DATE       120    8  UINT     "UTC day   (0 before first GPS lock)"
+  # Time / position / velocity
+  ITEM    UPTIME_S   128   32  FLOAT    "Seconds since midnight UTC (from GPS_STAT time field)"
+  ITEM    ALTITUDE_FT 160  32  INT      "Altitude above sea level, feet"
+    UNITS Feet ft
+  ITEM    LATITUDE   192   32  FLOAT    "Latitude, decimal degrees (negative = South)"
+    UNITS Degrees deg
+  ITEM    LONGITUDE  224   32  FLOAT    "Longitude, decimal degrees (negative = West)"
+    UNITS Degrees deg
+  ITEM    H_VEL_FPS  256   32  INT      "Horizontal velocity, feet per second"
+    UNITS "Feet/Second" "ft/s"
+  ITEM    HEADING_DEG 288  32  INT      "Heading, degrees from North"
+    UNITS Degrees deg
+  ITEM    V_VEL_FPS  320   32  INT      "Vertical velocity, feet per second (up = positive)"
+    UNITS "Feet/Second" "ft/s"
+  # GPS fix and satellite counts
+  ITEM    FIX_TYPE   352    8  UINT     "GPS fix type"
+    STATE NO_FIX  0
+    STATE FIX_2D  2
+    STATE FIX_3D  3
+  ITEM    SAT_TOTAL  360    8  UINT     "Total satellites in view"
+  ITEM    SAT_24DB   368    8  UINT     "Satellites with signal strength > 24 dB-Hz (yellow or better)"
+  ITEM    SAT_32DB   376    8  UINT     "Satellites with signal strength > 32 dB-Hz (green or better)"
+  ITEM    SAT_40DB   384    8  UINT     "Satellites with signal strength > 40 dB-Hz (blue)"
+
+# ---------------------------------------------------------------------------
+# LINK_STATUS  (64 bytes)
+# Binary layout: C a10 S< C C f< L< L< l< l< L< L< l< l< C L< L< l<
+# ---------------------------------------------------------------------------
+TELEMETRY FEATHERWEIGHT_GPS LINK_STATUS LITTLE_ENDIAN "RF link health and tracker battery"
+  # Identification
+  ID_ITEM PACKET_ID    0    8  UINT   2  "Packet type (2 = LINK_STATUS)"
+  ITEM    TRACKER_ID   8   80  STRING   "Tracker callsign or LoRa ID (up to 10 chars)"
+  # UTC date
+  ITEM    YEAR        88   16  UINT     "UTC year (0 before first GPS lock)"
+  ITEM    MONTH      104    8  UINT     "UTC month"
+  ITEM    DATE       112    8  UINT     "UTC day"
+  # Uptime
+  ITEM    UPTIME_S   120   32  FLOAT    "Seconds since internal clock reference"
+  # Packet counters
+  ITEM    PKT_RX     152   32  UINT     "Tracker telemetry packets received by ground station"
+  ITEM    PKT_TX     184   32  UINT     "Tracker telemetry packets sent"
+  # Ground station LoRa receive quality
+  ITEM    GS_RSSI    216   32  INT      "Ground station received RSSI, dBm"
+    UNITS dBm dBm
+  ITEM    GS_SNR     248   32  INT      "Ground station received SNR, dB"
+    UNITS dB dB
+  # Acknowledgement counters
+  ITEM    ACK_RX     280   32  UINT     "GS acknowledgement packets received by tracker"
+  ITEM    ACK_TX     312   32  UINT     "GS acknowledgement packets sent"
+  # Tracker receive quality (ack link, GS->tracker direction)
+  ITEM    TRK_RSSI   344   32  INT      "Tracker received RSSI for ack packets, dBm"
+    UNITS dBm dBm
+  ITEM    TRK_SNR    376   32  INT      "Tracker received SNR for ack packets, dB"
+    UNITS dB dB
+  # LoRa radio parameters
+  ITEM    LORA_SF    408    8  UINT     "LoRa spreading factor (7–12)"
+  ITEM    FREQUENCY  416   32  UINT     "LoRa center frequency, Hz (e.g. 915000000)"
+    UNITS Hz Hz
+  # Power
+  ITEM    BATTERY_MV 448   32  UINT     "Tracker battery voltage, millivolts (divide by 1000 for volts)"
+    UNITS mV mV
+  # TODO: relay temperature is present only when a relay packet was involved; 0 otherwise
+  ITEM    RELAY_TEMP 480   32  INT      "Relay node temperature, degrees C (0 if not a relay packet)"
+    UNITS "Degrees C" "°C"
+
+# ---------------------------------------------------------------------------
+# UNKNOWN_LINE  (201 bytes)
+# Binary layout: C a200
+# Captures any @ line that did not match GPS_STAT or RX_NOMTK, and any
+# non-@ line that somehow escaped the protocol's pre-filter.
+# ---------------------------------------------------------------------------
+TELEMETRY FEATHERWEIGHT_GPS UNKNOWN_LINE LITTLE_ENDIAN "Unparsed or unrecognised serial line"
+  ID_ITEM PACKET_ID   0    8  UINT  255  "Packet type (255 = UNKNOWN_LINE)"
+  ITEM    RAW_LINE    8 1600  STRING     "Raw line text, null-padded to 200 bytes"
