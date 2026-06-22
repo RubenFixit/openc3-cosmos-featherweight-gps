@@ -46,8 +46,8 @@ module FeatherweightGps
       (TRK|GS|FND) \s+                       # unit type
       (\S+) \s+                              # tracker ID
       Alt \s+ ([+-]?\d+) \s+                # altitude ft
-      lt \s+ ([+-]?\d+\.\d+) \s+            # latitude deg
-      ln \s+ ([+-]?\d+\.\d+) \s+            # longitude deg
+      lt \s+ ([+-]?\d+(?:\.\d+)?) \s+        # latitude deg
+      ln \s+ ([+-]?\d+(?:\.\d+)?) \s+       # longitude deg
       Vel \s+ ([+-]?\d+) \s+                # horizontal velocity fps
             ([+-]?\d+) \s+                  # heading deg
             ([+-]?\d+) \s+                  # vertical velocity fps
@@ -130,6 +130,7 @@ module FeatherweightGps
       when :gps_status  then serialize_gps_status(result)
       when :link_status then serialize_link_status(result)
       when :unknown     then serialize_unknown(result)
+      else raise ArgumentError, "unhandled packet type: #{result[:type].inspect}"
       end
     end
 
@@ -144,7 +145,7 @@ module FeatherweightGps
         month:       m[2].to_i,
         date:        m[3].to_i,
         uptime_s:    parse_time(m[4]),
-        unit_type:   UNIT_TYPE_MAP[m[5]] || 1,
+        unit_type:   UNIT_TYPE_MAP[m[5]],
         tracker_id:  m[6],
         altitude_ft: m[7].to_i,
         latitude:    m[8].to_f,
@@ -192,6 +193,7 @@ module FeatherweightGps
     #   scientific    — firmware quirk; falls back to 0
     private_class_method def self.parse_time(str)
       return 0.0 if str.nil? || str.empty?
+      return str.to_f if str.match?(/[eE]/)
 
       parts = str.split(':').map(&:to_f)
       case parts.length
@@ -199,8 +201,6 @@ module FeatherweightGps
       when 2 then parts[0] * 60.0 + parts[1]
       else        parts[0]
       end
-    rescue StandardError
-      0.0
     end
 
     # Binary serialization helpers.

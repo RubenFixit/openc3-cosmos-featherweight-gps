@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'openc3/protocols/protocol'
+require 'openc3/interfaces/protocols/protocol'
 require_relative 'featherweight_gps_parser'
 
 module OpenC3

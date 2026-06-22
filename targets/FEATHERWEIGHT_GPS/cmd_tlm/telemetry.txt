@@ -14,7 +14,7 @@
 
 # ---------------------------------------------------------------------------
 # GPS_STATUS  (49 bytes)
-# Binary layout: C C a10 S< C C f< l< f< f< l< l< l< C C C C C
+# Binary layout: C C a10 S< C C e l< e e l< l< l< C C C C C
 # ---------------------------------------------------------------------------
 TELEMETRY FEATHERWEIGHT_GPS GPS_STATUS LITTLE_ENDIAN "GPS position and velocity from tracker"
   # Identification
@@ -54,7 +54,7 @@ TELEMETRY FEATHERWEIGHT_GPS GPS_STATUS LITTLE_ENDIAN "GPS position and velocity 
 
 # ---------------------------------------------------------------------------
 # LINK_STATUS  (64 bytes)
-# Binary layout: C a10 S< C C f< L< L< l< l< L< L< l< l< C L< L< l<
+# Binary layout: C a10 S< C C e L< L< l< l< L< L< l< l< C L< L< l<
 # ---------------------------------------------------------------------------
 TELEMETRY FEATHERWEIGHT_GPS LINK_STATUS LITTLE_ENDIAN "RF link health and tracker battery"
   # Identification
